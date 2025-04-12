@@ -18,7 +18,11 @@ private:
 	long long pos = 0;
 	//ラベルどこ？
 	long long searching_label = -1;
+
+	//DEBUGオプション
+	bool DEBUG = false;
 public:
+	WV(bool debug = false) : DEBUG(debug) {}
 	bool ReadFile(string filename);
 	long long ReadArg();
 	long long bin2dec(string bin);
@@ -40,9 +44,7 @@ bool WV::ReadFile(string filename) {
 		}
 	}
 	inputFile.close();
-	#ifdef DEBUG
-		cout << file_content << endl;
-	#endif
+	if (DEBUG)cout << file_content << endl;
 	return true;
 }
 
@@ -64,9 +66,7 @@ long long WV::ReadArg() {
 		}
 	}
 	pos++;
-	#ifdef DEBUG
-		cout << "DEBUG;bin: " << bin << ",pushed: " << bin2dec(bin) << endl;
-	#endif
+	if (DEBUG)cout << "DEBUG;bin: " << bin << ",pushed: " << bin2dec(bin) << endl;
 	return bin2dec(bin);
 }
 
@@ -85,15 +85,11 @@ bool WV::EXEC() {
 			cerr << "Error: Label not found" << endl;
 			return false;
 		}
-		#ifdef DEBUG
-			cout << "DEBUG;EOF" << endl;
-		#endif
+		if (DEBUG)cout << "DEBUG;EOF" << endl;
 		return false; // EOF
 	}
 	char IMP = file_content[pos++];
-	#ifdef DEBUG
-		cout << "DEBUG;pos: " << pos << ", IMP: " << IMP << ",order:" << file_content.substr(pos, 2) << endl;
-	#endif
+	if (DEBUG)cout << "DEBUG;pos: " << pos << ", IMP: " << IMP << ",order:" << file_content.substr(pos, 2) << endl;
 	if (IMP == 'W') {
 		//スタック操作
 		if (file_content.substr(pos, 2) == "WW"){
@@ -253,9 +249,7 @@ bool WV::EXEC() {
 				}else{
 					pos = label[arg];
 				}
-				#ifdef DEBUG
-					cout << "DEBUG;goto * " << arg << ",pos: " << pos << endl;
-				#endif
+				if (DEBUG)cout << "DEBUG;goto * " << arg << ",pos: " << pos << endl;
 			}
 		}else if (file_content.substr(pos, 2) == "Wv"){
 			//スタックが0ならラベルを参照
@@ -273,9 +267,7 @@ bool WV::EXEC() {
 					}else{
 						pos = label[arg];
 					}
-					#ifdef DEBUG
-					cout << "DEBUG;goto * " << arg << ",pos: " << pos << endl;
-					#endif
+					if (DEBUG)cout << "DEBUG;goto * " << arg << ",pos: " << pos << endl;
 				}
 			}
 			st.pop_back();
@@ -295,9 +287,7 @@ bool WV::EXEC() {
 						}else{
 							pos = label[arg];
 						}
-						#ifdef DEBUG
-						cout << "DEBUG;goto * " << arg << ",pos: " << pos << endl;
-						#endif
+						if (DEBUG)cout << "DEBUG;goto * " << arg << ",pos: " << pos << endl;
 					}
 				}
 			st.pop_back();
@@ -313,9 +303,7 @@ bool WV::EXEC() {
 				}else{
 					pos = label[arg];
 				}
-				#ifdef DEBUG
-				cout << "DEBUG;goto * " << arg << ",pos: " << pos << endl;
-				#endif
+				if (DEBUG)cout << "DEBUG;goto * " << arg << ",pos: " << pos << endl;
 			}
 		}else if (file_content.substr(pos, 2) == "vV"){
 			is_searching_label
@@ -339,9 +327,7 @@ bool WV::EXEC() {
 			long long address = st.back(); st.pop_back();
 			long long value = st.back(); st.pop_back();
 			heap[address] = value;
-			#ifdef DEBUG
-				cout << "DEBUG;heap[" << address << "] = " << value << endl;
-			#endif
+			if (DEBUG)cout << "DEBUG;heap[" << address << "] = " << value << endl;
 		}else if (file_content.substr(pos, 2) == "VV"){
 			pos += 2;
 			is_searching_label
@@ -365,9 +351,7 @@ bool WV::EXEC() {
 				return false;
 			}
 			long long value = st.back(); st.pop_back();
-			#ifdef DEBUG
-				cout << "DEBUG;value: " << value << endl;
-			#endif
+			if (DEBUG)cout << "DEBUG;value: " << value << endl;
 			cout << static_cast<char>(value);
 		}else if (file_content.substr(pos, 2) == "vw"){
 			pos += 2;
@@ -397,9 +381,7 @@ bool WV::EXEC() {
 		is_searching_label
 		//終了処理
 		if (file_content.substr(pos, 1) == "V"){
-			#ifdef DEBUG
-				cout << "DEBUG;END" << endl;
-			#endif
+			if (DEBUG)cout << "DEBUG;END" << endl;
 			return false;
 		}
 	}
@@ -407,11 +389,14 @@ bool WV::EXEC() {
 }
 
 int main(int argc, char *argv[]) {
-	if (argc != 2) {
-		cerr << "Usage: " << argv[0] << " <input_file>" << endl;
+	bool DEBUG = false;
+	if ((argc == 3)&&(argv[2] == string("-d"))){
+		DEBUG = true;
+	}else if (argc != 2) {
+		cerr << "Usage: " << argv[0] << " <input_file> [-d]" << endl;
 		return 1;
 	}
-	WV wv;
+	WV wv(DEBUG);
 	//ファイル読み込み+コメント削除
 	wv.ReadFile(argv[1]);
 	//ファイル内容を実行する
